@@ -38,9 +38,61 @@ DB_PASSWORD="your_password"
 DB_NAME="cricket_db"
 ```
 
-### 4️⃣ Run the App
+### 4️⃣ Setup Database Schema
+Create the MySQL database and all required tables:
 
+```bash
+# First, create the database in MySQL
+mysql -u root -p
+CREATE DATABASE cricket_db;
+EXIT;
+
+# Then run the schema creation script
+python create_schema.py
 ```
+
+This will create all 13 tables needed for the project:
+- `players` - Player information
+- `recent_matches` - Recent match data
+- `top_odi_runs` - Top ODI run scorers
+- `venues` - Stadium and venue information
+- `combined_matches` - Unified match data
+- `batting_data` - Detailed batting statistics
+- `series_matches` - Series match information
+- `players_stats` - Player statistics across formats
+- `players_partnerships_data` - Batting partnership data
+- `bowlers_bowling_venue_data` - Bowling statistics by venue
+- `batters_batting_data` - Detailed batter statistics
+- `bowling_data` - Bowling performance data
+- `fielding_data` - Fielding statistics
+
+### 5️⃣ Fetch Real Data from API (Recommended)
+Populate the database with real cricket data from Cricbuzz API:
+
+```bash
+python fetch_api_data.py
+```
+
+This script will:
+- Fetch live and recent matches from Cricbuzz API
+- Extract player information and store in database
+- Get match scorecards with batting and bowling statistics
+- Store all data in MySQL for SQL query analysis
+
+**Note**: This requires a valid `RAPIDAPI_KEY` in your `.env` file.
+
+### 6️⃣ Seed Sample Data (Optional - for testing only)
+If you want to test with sample data instead of API data:
+
+```bash
+python seed_data.py
+```
+
+**Note**: For the actual project, use `fetch_api_data.py` to get real data from the API.
+
+### 7️⃣ Run the App
+
+```bash
 streamlit run app.py
 ```
 
@@ -58,7 +110,10 @@ streamlit run app.py
 * **Data Management**: Quickly refresh, clear, or regenerate data.
 
 ### 3️⃣ SQL Query Playground
-* **Pre-Built Queries**: Get quick insights from a list of pre-built queries for common stats.
+* **25 Pre-Built Queries**: Complete set of SQL queries covering beginner to advanced levels:
+  - **Beginner (Q1-Q8)**: Basic SELECT, WHERE, GROUP BY, ORDER BY operations
+  - **Intermediate (Q9-Q16)**: JOINs, subqueries, aggregate functions
+  - **Advanced (Q17-Q25)**: Window functions, CTEs, complex analytical calculations
 * **Custom Query Builder**: Write and execute your own SQL queries.
 * **Schema Explorer**: An interactive browser to view your database structure.
 
@@ -78,6 +133,74 @@ mysql-connector-python
 SQLAlchemy
 PyMySQL
 ```
+
+## 🗄️ Database Schema
+
+The project uses a comprehensive MySQL database schema with 13 tables:
+
+1. **players** - Core player information (name, country, role, batting/bowling style)
+2. **recent_matches** - Recent match details and results
+3. **top_odi_runs** - Top ODI run scorers with statistics
+4. **venues** - Stadium information with capacity
+5. **combined_matches** - Unified match data across formats
+6. **batting_data** - Detailed batting performance per match
+7. **series_matches** - Series and tournament match information
+8. **players_stats** - Player statistics across Test, ODI, and T20 formats
+9. **players_partnerships_data** - Batting partnership records
+10. **bowlers_bowling_venue_data** - Bowling statistics by venue
+11. **batters_batting_data** - Detailed batter statistics over time
+12. **bowling_data** - Comprehensive bowling performance data
+13. **fielding_data** - Fielding statistics (catches, stumpings, run-outs)
+
+## 🔍 SQL Queries Included
+
+The project includes 25 SQL queries covering:
+
+- **Basic Queries**: Player listings, match summaries, venue information
+- **Aggregate Functions**: Team wins, player counts, format-wise statistics
+- **JOINs**: Cross-table analysis, player-match relationships
+- **Window Functions**: Rankings, trends, performance evolution
+- **CTEs (Common Table Expressions)**: Complex analytical queries
+- **Time-Series Analysis**: Performance trends over time
+- **Advanced Analytics**: Composite scoring, head-to-head analysis, form tracking
+
+## 🛠️ Project Structure
+
+```
+Cricbuzz_livestats/
+├── app.py                 # Main Streamlit application
+├── create_schema.py       # Database schema creation script
+├── seed_data.py          # Sample data insertion script
+├── requirements.txt      # Python dependencies
+├── .env                  # Environment variables (create this)
+├── README.md             # Project documentation
+├── pages/
+│   ├── live_matches.py   # Live matches dashboard
+│   ├── top_stats.py      # Player statistics page
+│   ├── sql_queries.py    # SQL analytics page (25 queries)
+│   └── crud_operations.py # CRUD operations interface
+└── utils/
+    └── db_connection.py   # Database connection utilities
+```
+
+## 🚨 Troubleshooting
+
+### Database Connection Issues
+- Ensure MySQL is running: `mysql -u root -p`
+- Verify database exists: `SHOW DATABASES;`
+- Check `.env` file has correct credentials
+
+### Table Not Found Errors
+- Run `python create_schema.py` to create all tables
+- Verify tables exist: `USE cricket_db; SHOW TABLES;`
+
+### Empty Query Results
+- Run `python seed_data.py` to populate sample data
+- Check data exists: `SELECT COUNT(*) FROM players;`
+
+### API Errors
+- Verify `RAPIDAPI_KEY` is set in `.env`
+- Check API key is valid and has remaining quota
 
 ## 🙏 Acknowledgments
 * **Cricbuzz API** – For rich, real-time cricket data.

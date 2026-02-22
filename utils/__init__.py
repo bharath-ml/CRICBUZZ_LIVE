@@ -1,6 +1,5 @@
 # utils/__init__.py
 from .db_connection import (
-    get_mysql_schema,
     list_databases,
     list_tables,
     get_table_columns,

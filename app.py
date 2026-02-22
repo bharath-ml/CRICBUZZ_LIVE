@@ -139,6 +139,65 @@ def main():
         st.warning("Create a corresponding file in the `pages` directory.")
 
 def show_home():
+    # Data Fetching Section
+    st.subheader("📥 Fetch Data from API")
+    st.info("💡 **First time setup**: Click the button below to fetch real cricket data from Cricbuzz API and store it in MySQL database. This data will be used for all SQL queries.")
+    
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        if st.button("🔄 Fetch & Store Data from API", type="primary", use_container_width=True):
+            with st.spinner("Fetching data from Cricbuzz API... This may take a minute."):
+                try:
+                    import subprocess
+                    import sys
+                    result = subprocess.run(
+                        [sys.executable, "fetch_api_data.py"],
+                        capture_output=True,
+                        text=True,
+                        cwd=os.path.dirname(os.path.abspath(__file__))
+                    )
+                    if result.returncode == 0:
+                        st.success("✅ Data fetched and stored successfully!")
+                        st.code(result.stdout, language="text")
+                        st.session_state['data_fetched'] = True
+                    else:
+                        st.error("❌ Error fetching data. Check the output below:")
+                        st.code(result.stderr, language="text")
+                except Exception as e:
+                    st.error(f"❌ Error: {e}")
+                    st.info("💡 You can also run `python fetch_api_data.py` in your terminal.")
+    
+    with col2:
+        # Check if data exists in database
+        try:
+            from utils.db_connection import create_connection
+            from dotenv import load_dotenv
+            load_dotenv()
+            conn = create_connection(
+                os.getenv("DB_HOST", "localhost"),
+                os.getenv("DB_USER", "root"),
+                os.getenv("DB_PASSWORD", ""),
+                os.getenv("DB_NAME", "cricket_db")
+            )
+            if conn:
+                cur = conn.cursor()
+                cur.execute("SELECT COUNT(*) FROM players")
+                player_count = cur.fetchone()[0]
+                cur.execute("SELECT COUNT(*) FROM combined_matches")
+                match_count = cur.fetchone()[0]
+                cur.close()
+                conn.close()
+                st.metric("Players", player_count)
+                st.metric("Matches", match_count)
+                if player_count > 0 or match_count > 0:
+                    st.success("✅ Database has data!")
+                else:
+                    st.warning("⚠️ Database is empty")
+        except Exception as e:
+            st.warning("⚠️ Could not check database")
+    
+    st.markdown("---")
+    
     # Feature cards section
     st.subheader("✨ Explore the Dashboard's Key Features")
     col1, col2, col3, col4 = st.columns(4)

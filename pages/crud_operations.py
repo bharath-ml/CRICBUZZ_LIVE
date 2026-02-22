@@ -2,7 +2,6 @@
 import streamlit as st
 import pandas as pd
 from utils.db_connection import (
-    get_mysql_schema,
     list_databases,
     list_tables,
     get_table_columns,
@@ -15,7 +14,7 @@ from utils.db_connection import (
 
 def show_crud_operations():
     st.title("🛠️ CRUD Operations")
-    st.caption("Create, Read, Update, Delete Player Records (MySQL via Streamlit)")
+    st.caption("Create, Read, Update, Delete Records (MySQL via Streamlit)")
 
     # -------------------------------
     # 1) Connection details
@@ -25,38 +24,46 @@ def show_crud_operations():
     user = st.text_input("User", value="root")
     passwd = st.text_input("Password", type="password")
 
-    if st.button("Connect & Discover Databases"):
+    if st.button("Connect & Get Databases"):
         try:
-            schema = get_mysql_schema(host, user, passwd)
-            st.session_state["schema"] = schema
-            st.success(f"✅ Connected. Found {len(schema)} databases.")
+            dbs = list_databases(host, user, passwd)
+            st.session_state["db_creds"] = {"host": host, "user": user, "passwd": passwd}
+            st.success(f"✅ Connected. Found {len(dbs)} databases.")
         except Exception as e:
             st.error(f"❌ Failed: {e}")
 
-    schema = st.session_state.get("schema", None)
+    creds = st.session_state.get("db_creds", None)
     st.divider()
 
     # -------------------------------
     # 2) Choose database & table
     # -------------------------------
-    if schema:
+    if creds:
+        host, user, passwd = creds["host"], creds["user"], creds["passwd"]
         st.header("📂 Select Database & Table")
-        dbs = sorted(schema.keys())
+        
+        dbs = list_databases(host, user, passwd)
         database = st.selectbox(
             "Choose Database",
             dbs,
-            index=max(0, dbs.index("cricbuzz")) if "cricbuzz" in dbs else 0
+            index=dbs.index("cricbuzz") if "cricbuzz" in dbs else 0
         )
 
-        tables = sorted(schema[database]["tables"].keys())
-        default_table = "trending_players" if "trending_players" in tables else (
-            "player_squad" if "player_squad" in tables else tables[0] if tables else ""
-        )
-        table = st.selectbox(
-            "Choose Table",
-            tables,
-            index=max(0, tables.index(default_table)) if tables else 0
-        )
+        table = None
+        if database:
+            tables = list_tables(host, user, passwd, database)
+            if tables:
+                default_table = "trending_players" if "trending_players" in tables else (
+                    "player_squad" if "player_squad" in tables else tables[0]
+                )
+                table = st.selectbox(
+                    "Choose Table",
+                    tables,
+                    index=tables.index(default_table) if default_table in tables else 0
+                )
+            else:
+                st.warning(f"No tables found in database '{database}'.")
+
 
         st.divider()
 

@@ -4,6 +4,8 @@ import mysql.connector
 from mysql.connector import Error
 import os
 from dotenv import load_dotenv
+from sqlalchemy import create_engine
+from urllib.parse import quote_plus
 
 # ----------------- Database Connection Functions -----------------
 # 1️⃣ Create a connection function
@@ -30,10 +32,20 @@ def create_connection():
         return None
 
 # 2️⃣ Function to run a query and return as DataFrame
-def run_query(conn, query):
-    """Run a given SQL query and return the results as a pandas DataFrame."""
+@st.cache_data(ttl=300, show_spinner=False)
+def run_query_cached(query):
+    """Run a given SQL query and return the results as a pandas DataFrame, cached for 5 mins."""
+    load_dotenv()
+    host = os.getenv("DB_HOST", "localhost")
+    user = os.getenv("DB_USER", "root")
+    password = os.getenv("DB_PASSWORD", "")
+    database = os.getenv("DB_NAME", "cricket_db")
+    
     try:
-        df = pd.read_sql(query, conn)
+        password_encoded = quote_plus(password)
+        engine = create_engine(f"mysql+mysqlconnector://{user}:{password_encoded}@{host}/{database}")
+        df = pd.read_sql(query, engine)
+        engine.dispose()
         return df
     except Exception as e:
         st.error(f"❌ Query Error: {e}")
@@ -588,11 +600,6 @@ def show_sql_queries():
 
     st.info("💡 Note: This page connects to a MySQL database to run the queries. Make sure your database is running and the connection details are correct.")
 
-    conn = create_connection()
-    if conn is None:
-        st.warning("Could not connect to the database. Please check your credentials and connection.")
-        return
-
     st.subheader("Run Custom SQL Queries")
     
     # Select a pre-written query or enter a custom one
@@ -612,22 +619,20 @@ def show_sql_queries():
         height=200
     )
 
-    if st.button("Run Query"):
+    if st.button("Run Query", type="primary"):
         if query_input.strip():
             with st.spinner("Executing query..."):
-                df = run_query(conn, query_input)
+                df = run_query_cached(query_input)
 
             if df is not None:
                 st.subheader("Query Results")
                 st.dataframe(df, use_container_width=True)
-                st.success("Query executed successfully!")
+                st.success("Query executed successfully! (Results may be cached)")
             else:
                 st.error("Query failed. Please check your SQL syntax or database tables.")
         else:
             st.warning("Please enter a query to run.")
 
-    # Close connection
-    conn.close()
     st.markdown("---")
 
     st.subheader("Available Tables")

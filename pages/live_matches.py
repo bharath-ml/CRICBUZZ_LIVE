@@ -172,8 +172,8 @@ def show_live_matches():
             st.success(f"{t2}: {t2_inn.get('runs', 0)}/{t2_inn.get('wickets', 0)} "
                        f"in {t2_inn.get('overs', 0)} overs")
 
-        # Button to view full scorecard
-        if st.button(f"📑 View Scorecard - {team1} vs {team2}", key=f"btn_{match_id}"):
+        # Expander to view full scorecard
+        with st.expander(f"📑 View Scorecard - {team1} vs {team2}"):
             show_innings_scorecard(api, match_id)
 
         st.markdown("---")
